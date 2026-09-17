@@ -3,7 +3,6 @@ CREATE DATABASE E_commerce;
 USE E_commerce;
 
 -- DDL
-
 CREATE TABLE Paises(
     id_pais INT AUTO_INCREMENT,
     nombre VARCHAR(50) UNIQUE NOT NULL,
@@ -51,6 +50,7 @@ CREATE TABLE Productos(
     descripcion VARCHAR(200),
     precio DECIMAL(10, 2) NOT NULL CHECK(precio > 0),
     costo DECIMAL(10, 2) NOT NULL CHECK(costo >= 0),
+    peso_kg DECIMAL(6, 2) NOT NULL DEFAULT 0 CHECK (peso_kg >= 0),
     stock INT NOT NULL CHECK(stock >= 0) DEFAULT 0,
     sku VARCHAR(12) NOT NULL UNIQUE,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -176,37 +176,37 @@ INSERT INTO Proveedores (nombre, email_contacto, telefono_contacto) VALUES
 ('Ferretería Industrial', 'ventas@ferreindustrial.com', '5551009'),
 ('AutoPartes Express', 'info@autopartesexp.com', '5551010');
 
-INSERT INTO Productos (categoria_id, proveedor_id, nombre, descripcion, precio, costo, stock, sku) VALUES
-(1, 1, 'Laptop Gaming X15', 'Laptop de alto rendimiento 16GB RAM', 1200.00, 850.00, 15, 'LAP-GAM-001'),
-(1, 1, 'Mouse Inalámbrico Pro', 'Mouse ergonómico óptico', 25.00, 12.00, 50, 'MOU-INA-002'),
-(1, 1, 'Teclado Mecánico RGB', 'Teclado retroiluminado switch azul', 75.00, 40.00, 30, 'TEC-MEC-003'),
-(1, 1, 'Monitor 27 Pulgadas', 'Monitor IPS 144Hz 1080p', 220.00, 150.00, 20, 'MON-27P-004'),
-(2, 2, 'Camiseta Algodón Negra', 'Camiseta básica 100% algodón', 15.00, 6.00, 100, 'CAM-ALG-005'),
-(2, 2, 'Pantalón Jean Clásico', 'Corte recto color azul', 45.00, 22.00, 60, 'PAN-JEA-006'),
-(2, 2, 'Chaqueta Impermeable', 'Chaqueta con capucha para lluvia', 80.00, 45.00, 25, 'CHA-IMP-007'),
-(3, 3, 'Tenis Deportivos Running', 'Calzado ligero para correr', 90.00, 50.00, 40, 'TEN-DEP-008'),
-(3, 3, 'Zapato Casual de Cuero', 'Zapato elegante de vestir', 110.00, 65.00, 18, 'ZAP-CAS-009'),
-(4, 4, 'Juego de Sartenes 3Pcs', 'Sartenes antiadherentes de aluminio', 50.00, 28.00, 35, 'JUE-SAR-010'),
-(4, 4, 'Cafetera de Goteo', 'Capacidad 12 tazas programable', 40.00, 22.00, 22, 'CAF-GOT-011'),
-(4, 4, 'Lámpara de Escritorio LED', 'Luz regulable con puerto USB', 30.00, 14.00, 45, 'LAM-ESC-012'),
-(5, 5, 'Balón de Fútbol Profesional', 'Tamaño 5 termo-sellado', 35.00, 18.00, 50, 'BAL-FUT-013'),
-(5, 5, 'Mancuernas 10kg Par', 'Mancuernas de hierro recubiertas', 60.00, 35.00, 15, 'MAN-10K-014'),
-(5, 5, 'Tapete para Yoga', 'Antideslizante de 6mm', 20.00, 9.00, 80, 'TAP-YOG-015'),
-(6, 6, 'Set de Cremas Faciales', 'Hidratante día y noche', 45.00, 20.00, 30, 'SET-CRE-016'),
-(6, 6, 'Shampoo Orgánico 500ml', 'Sin sulfatos ni parabenos', 18.00, 8.00, 65, 'SHA-ORG-017'),
-(7, 7, 'Set de Bloques de Construcción', 'Juego educativo 500 piezas', 35.00, 16.00, 40, 'SET-BLO-018'),
-(7, 7, 'Carro a Control Remoto', 'Batería recargable 4x4', 55.00, 28.00, 25, 'CAR-CON-019'),
-(8, 8, 'Novela Ficción Bestseller', 'Edición tapa dura', 22.00, 10.00, 50, 'NOV-FIC-020'),
-(8, 8, 'Aprende SQL en 30 Días', 'Guía práctica para principiantes', 30.00, 12.00, 40, 'APR-SQL-021'),
-(9, 9, 'Taladro Percutor 750W', 'Incluye maletín y accesorios', 95.00, 55.00, 20, 'TAL-PER-022'),
-(9, 9, 'Juego de Destornilladores', 'Set de 12 piezas magnéticas', 25.00, 11.00, 55, 'JUE-DES-023'),
-(10, 10, 'Aceite Sintético para Motor', 'Galón 5W-30', 40.00, 22.00, 70, 'ACE-SIN-024'),
-(10, 10, 'Kit de Limpieza para Auto', 'Champú, cera y microfibras', 30.00, 14.00, 45, 'KIT-LIM-025'),
-(1, 1, 'Auriculares Bluetooth', 'Cancelación de ruido activa', 130.00, 75.00, 35, 'AUR-BLU-026'),
-(2, 2, 'Sudadera con Capucha', 'Talla L color gris', 40.00, 18.00, 50, 'SUD-CAP-027'),
-(3, 3, 'Sandalias de Playa', 'Talla variada antideslizantes', 12.00, 4.00, 90, 'SAN-PLA-028'),
-(4, 4, 'Licuadora de Alta Potencia', 'Vaso de vidrio 1.5L', 70.00, 40.00, 18, 'LIC-ALT-029'),
-(5, 5, 'Cuerda para Saltar', 'Rápida con rodamientos', 10.00, 3.50, 110, 'CUE-SAL-030');
+INSERT INTO Productos (categoria_id, proveedor_id, nombre, descripcion, precio, costo, peso_kg, stock, sku) VALUES
+(1, 1, 'Laptop Gaming X15', 'Laptop de alto rendimiento 16GB RAM', 1200.00, 850.00, 2.50, 15, 'LAP-GAM-001'),
+(1, 1, 'Mouse Inalámbrico Pro', 'Mouse ergonómico óptico', 25.00, 12.00, 0.15, 50, 'MOU-INA-002'),
+(1, 1, 'Teclado Mecánico RGB', 'Teclado retroiluminado switch azul', 75.00, 40.00, 1.00, 30, 'TEC-MEC-003'),
+(1, 1, 'Monitor 27 Pulgadas', 'Monitor IPS 144Hz 1080p', 220.00, 150.00, 5.50, 20, 'MON-27P-004'),
+(2, 2, 'Camiseta Algodón Negra', 'Camiseta básica 100% algodón', 15.00, 6.00, 0.20, 100, 'CAM-ALG-005'),
+(2, 2, 'Pantalón Jean Clásico', 'Corte recto color azul', 45.00, 22.00, 0.50, 60, 'PAN-JEA-006'),
+(2, 2, 'Chaqueta Impermeable', 'Chaqueta con capucha para lluvia', 80.00, 45.00, 0.80, 25, 'CHA-IMP-007'),
+(3, 3, 'Tenis Deportivos Running', 'Calzado ligero para correr', 90.00, 50.00, 0.90, 40, 'TEN-DEP-008'),
+(3, 3, 'Zapato Casual de Cuero', 'Zapato elegante de vestir', 110.00, 65.00, 1.00, 18, 'ZAP-CAS-009'),
+(4, 4, 'Juego de Sartenes 3Pcs', 'Sartenes antiadherentes de aluminio', 50.00, 28.00, 2.00, 35, 'JUE-SAR-010'),
+(4, 4, 'Cafetera de Goteo', 'Capacidad 12 tazas programable', 40.00, 22.00, 1.80, 22, 'CAF-GOT-011'),
+(4, 4, 'Lámpara de Escritorio LED', 'Luz regulable con puerto USB', 30.00, 14.00, 1.20, 45, 'LAM-ESC-012'),
+(5, 5, 'Balón de Fútbol Profesional', 'Tamaño 5 termo-sellado', 35.00, 18.00, 0.45, 50, 'BAL-FUT-013'),
+(5, 5, 'Mancuernas 10kg Par', 'Mancuernas de hierro recubiertas', 60.00, 35.00, 10.00, 15, 'MAN-10K-014'),
+(5, 5, 'Tapete para Yoga', 'Antideslizante de 6mm', 20.00, 9.00, 1.00, 80, 'TAP-YOG-015'),
+(6, 6, 'Set de Cremas Faciales', 'Hidratante día y noche', 45.00, 20.00, 0.60, 30, 'SET-CRE-016'),
+(6, 6, 'Shampoo Orgánico 500ml', 'Sin sulfatos ni parabenos', 18.00, 8.00, 0.55, 65, 'SHA-ORG-017'),
+(7, 7, 'Set de Bloques de Construcción', 'Juego educativo 500 piezas', 35.00, 16.00, 1.50, 40, 'SET-BLO-018'),
+(7, 7, 'Carro a Control Remoto', 'Batería recargable 4x4', 55.00, 28.00, 1.20, 25, 'CAR-CON-019'),
+(8, 8, 'Novela Ficción Bestseller', 'Edición tapa dura', 22.00, 10.00, 0.40, 50, 'NOV-FIC-020'),
+(8, 8, 'Aprende SQL en 30 Días', 'Guía práctica para principiantes', 30.00, 12.00, 0.50, 40, 'APR-SQL-021'),
+(9, 9, 'Taladro Percutor 750W', 'Incluye maletín y accesorios', 95.00, 55.00, 2.80, 20, 'TAL-PER-022'),
+(9, 9, 'Juego de Destornilladores', 'Set de 12 piezas magnéticas', 25.00, 11.00, 0.70, 55, 'JUE-DES-023'),
+(10, 10, 'Aceite Sintético para Motor', 'Galón 5W-30', 40.00, 22.00, 4.00, 70, 'ACE-SIN-024'),
+(10, 10, 'Kit de Limpieza para Auto', 'Champú, cera y microfibras', 30.00, 14.00, 2.20, 45, 'KIT-LIM-025'),
+(1, 1, 'Auriculares Bluetooth', 'Cancelación de ruido activa', 130.00, 75.00, 0.30, 35, 'AUR-BLU-026'),
+(2, 2, 'Sudadera con Capucha', 'Talla L color gris', 40.00, 18.00, 0.60, 50, 'SUD-CAP-027'),
+(3, 3, 'Sandalias de Playa', 'Talla variada antideslizantes', 12.00, 4.00, 0.30, 90, 'SAN-PLA-028'),
+(4, 4, 'Licuadora de Alta Potencia', 'Vaso de vidrio 1.5L', 70.00, 40.00, 3.00, 18, 'LIC-ALT-029'),
+(5, 5, 'Cuerda para Saltar', 'Rápida con rodamientos', 10.00, 3.50, 0.20, 110, 'CUE-SAL-030');
 
 -- Clientes
 INSERT INTO Clientes (nombre, apellido, email, contrasenia, fecha_registro) VALUES
