@@ -1,7 +1,9 @@
 -- 1. Top 10 Productos Más Vendidos: Generar un ranking con los 10 productos que han generado más ingresos.
-SELECT P.id_producto AS 'ID Producto', P.sku AS 'SKU', P.nombre AS 'Nombre Producto', SUM(DV.cantidad)AS 'No. Unidades Vendidas', CONCAT('$ ', SUM(DV.cantidad * DV.precio_unitario_congelado)) AS 'Total Recaudado'
+SELECT P.id_producto AS 'ID Producto', P.sku AS 'SKU', P.nombre AS 'Nombre Producto', 
+		SUM(DV.cantidad)AS 'No. Unidades Vendidas', 
+		CONCAT('$ ', SUM(DV.cantidad * DV.precio_unitario_congelado)) AS 'Total Recaudado'
 FROM Detalles_ventas DV
-INNER JOIN Productos P ON P.id_producto = DV.producto_id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+INNER JOIN Productos P ON P.id_producto = DV.producto_id
 INNER JOIN Ventas V ON V.id_venta = DV.venta_id
 WHERE V.estado_id IN (3,4)
 GROUP BY P.id_producto, P.sku, P.nombre
@@ -38,18 +40,36 @@ LIMIT 5;
 -- Nota: De la misma manera que en la primera consulta, se tomaron en cuenta los estados de entregado y enviado
 
 -- 4. Análisis de Ventas Mensuales
-SELECT YEAR(V.fecha_venta) AS 'Año', MONTH(V.fecha_venta) AS 'Num_Mes',
-    DATE_FORMAT(V.fecha_venta, '%M') AS 'Mes',
-    COALESCE(SUM(DV.cantidad), 0) AS 'Ventas Totales',
-    CONCAT('$ ', FORMAT(COALESCE(SUM(DV.cantidad * DV.precio_unitario_congelado), 0), 2)) AS 'Total Recaudado'
-FROM Ventas V
-INNER JOIN Detalles_ventas DV ON DV.venta_id = V.id_venta
-WHERE V.estado_id IN (3, 4)
-GROUP BY YEAR(V.fecha_venta), MONTH(V.fecha_venta), DATE_FORMAT(V.fecha_venta, '%M')
-ORDER BY YEAR(V.fecha_venta) DESC, MONTH(V.fecha_venta) ASC;
+SELECT sub.anio AS 'Año', sub.mes_num AS 'Num_Mes',
+    CASE sub.mes_num
+        WHEN 1 THEN 'Enero'
+        WHEN 2 THEN 'Febrero'
+        WHEN 3 THEN 'Marzo'
+        WHEN 4 THEN 'Abril'
+        WHEN 5 THEN 'Mayo'
+        WHEN 6 THEN 'Junio'
+        WHEN 7 THEN 'Julio'
+        WHEN 8 THEN 'Agosto'
+        WHEN 9 THEN 'Septiembre'
+        WHEN 10 THEN 'Octubre'
+        WHEN 11 THEN 'Noviembre'
+        WHEN 12 THEN 'Diciembre'
+        ELSE ''
+    END AS 'Mes',
+    sub.ventas_totales AS 'Ventas Totales',
+    CONCAT('$ ', FORMAT(sub.total_recaudado, 2)) AS 'Total Recaudado'
+FROM (
+    SELECT YEAR(V.fecha_venta) AS anio, MONTH(V.fecha_venta) AS mes_num,
+        COALESCE(SUM(DV.cantidad), 0) AS ventas_totales,
+        COALESCE(SUM(DV.cantidad * DV.precio_unitario_congelado), 0) AS total_recaudado
+    FROM Ventas V
+    INNER JOIN Detalles_ventas DV ON DV.venta_id = V.id_venta
+    WHERE V.estado_id IN (3, 4)
+    GROUP BY YEAR(V.fecha_venta), MONTH(V.fecha_venta)
+) AS sub
+ORDER BY sub.anio DESC, sub.mes_num ASC;
 
-
--- 5. Crecimiento de Clientes 
+-- 5. Crecimiento de Clientes
 SELECT sub.anio AS 'Año', sub.no_trimestre AS 'No. Trimestre', sub.nombre_trimestre AS 'Trimestre',
        COUNT(sub.id_cliente) AS 'No. Clientes'
 FROM (
@@ -148,8 +168,8 @@ SELECT PA.nombre AS 'País', R.nombre AS 'Región', CI.nombre AS 'Ciudad',
     COALESCE(SUM(DV.cantidad), 0) AS 'Unidades Vendidas',
     CONCAT('$ ', FORMAT(COALESCE(SUM(DV.cantidad * DV.precio_unitario_congelado), 0), 2)) AS 'Total Recaudado'
 FROM Ventas V
-INNER JOIN Direcciones_Envio DE ON DE.id_direccion = V.direccion_id
-INNER JOIN Ciudades CI ON CI.id_ciudad = DE.ciudad_id
+INNER JOIN direcciones_clientes DC ON DC.cliente_id = V.cliente_id
+INNER JOIN Ciudades CI ON CI.id_ciudad = DC.ciudad_id
 INNER JOIN Regiones R ON R.id_region = CI.region_id
 INNER JOIN Paises PA ON PA.id_pais = R.pais_id
 INNER JOIN Detalles_ventas DV ON DV.venta_id = V.id_venta
@@ -157,7 +177,6 @@ WHERE V.estado_id IN (3, 4)
 GROUP BY PA.nombre, R.nombre, CI.nombre
 ORDER BY SUM(DV.cantidad * DV.precio_unitario_congelado) DESC;
 -- Nota: De la misma manera que en la primera consulta, se tomaron en cuenta los estados de entregado y enviado
-
 
 -- 13. Ventas por Hora del Día: Determinar las horas pico de compras para optimizar campañas de marketing.
 SELECT HOUR(V.fecha_venta) AS 'Hora del Día',
@@ -169,7 +188,6 @@ INNER JOIN Detalles_ventas DV ON DV.venta_id = V.id_venta
 WHERE V.estado_id IN (3, 4)
 GROUP BY HOUR(V.fecha_venta)
 ORDER BY COUNT(DISTINCT V.id_venta) DESC;
-
 
 -- 14. Impacto de Promociones: Comparar las ventas de un producto antes, durante y después de una campaña de descuento.
 SELECT PRM.nombre_promocion AS 'Promoción', P.nombre AS 'Producto',
@@ -187,7 +205,6 @@ INNER JOIN Ventas V ON V.id_venta = DV.venta_id AND V.estado_id IN (3, 4)
 GROUP BY PRM.nombre_promocion, P.nombre, `Período`
 ORDER BY PRM.nombre_promocion, FIELD(`Período`, 'Antes', 'Durante', 'Después');
 
-
 -- 15. Análisis de Cohort: Analizar la retención de clientes mes a mes desde su primera compra.
 SELECT DATE_FORMAT(sub.mes_cohorte, '%Y-%m') AS 'Mes de Cohorte',
     PERIOD_DIFF(DATE_FORMAT(V.fecha_venta, '%Y%m') + 0, DATE_FORMAT(sub.mes_cohorte, '%Y%m') + 0) AS 'Meses Desde Primera Compra',
@@ -204,7 +221,6 @@ GROUP BY `Mes de Cohorte`, `Meses Desde Primera Compra`
 ORDER BY `Mes de Cohorte` ASC, `Meses Desde Primera Compra` ASC;
 -- Nota: El "mes de cohorte" es el mes de la primera compra confirmada del cliente. Se agrupa por ese mes
 -- y por cuántos meses después ocurrió cada compra posterior, para ver cuántos clientes de cada cohorte siguen activos.
-
 
 -- 16. Margen de Beneficio por Producto: Calcular el margen de beneficio para cada producto.
 SELECT P.id_producto AS 'ID Producto', P.nombre AS 'Nombre Producto',
@@ -236,8 +252,7 @@ WHERE V.estado_id IN (3, 4)
 GROUP BY C.id_cliente, C.nombre, C.apellido
 ORDER BY `Promedio de Días Entre Compras` ASC;
 
-
--- 18. Productos Más Vistos vs. Comprados (Simulado): Comparar los productos más visitados con los más comprados.
+-- 18. Productos Más Vistos vs. Comprados: Comparar los productos más visitados con los más comprados.
 SELECT P.id_producto AS 'ID Producto', P.nombre AS 'Nombre Producto',
     COALESCE(SUM(DV.cantidad), 0) AS 'No. Veces Agregado (Simulado Visto)',
     COALESCE(SUM(CASE WHEN V.estado_id IN (3, 4) THEN DV.cantidad ELSE 0 END), 0) AS 'No. Unidades Compradas'
@@ -246,7 +261,6 @@ LEFT JOIN Detalles_ventas DV ON DV.producto_id = P.id_producto
 LEFT JOIN Ventas V ON V.id_venta = DV.venta_id
 GROUP BY P.id_producto, P.nombre
 ORDER BY `No. Veces Agregado (Simulado Visto)` DESC;
-
 
 -- 19. Segmentación de Clientes (RFM): Clasificar a los clientes en segmentos (Recencia, Frecuencia, Monetario).
 SELECT sub.id_cliente AS 'ID Cliente', sub.nombre_completo AS 'Nombre Completo',
@@ -271,7 +285,6 @@ FROM (
     GROUP BY C.id_cliente, C.nombre, C.apellido
 ) AS sub
 ORDER BY sub.monetario DESC;
-
 
 -- 20. Predicción de Demanda Simple: Utilizar datos de ventas pasadas para proyectar las ventas del próximo mes para una categoría específica.
 SELECT CT.id_categoria AS 'ID Categoría', CT.nombre AS 'Categoría',
