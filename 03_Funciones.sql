@@ -5,13 +5,9 @@ RETURNS DECIMAL (10, 2)
 DETERMINISTIC 
 READS SQL DATA
 BEGIN 
-	-- Declaración de variables
-	-- Declaramos Variable para encontrar el id de la venta
-    DECLARE v_existe_venta INT DEFAULT 0;
-    -- Declaramos Variable para almacenar el monto total
+	DECLARE v_existe_venta INT DEFAULT 0;
     DECLARE v_monto_total DECIMAL(10, 2) DEFAULT 0;
     
-    -- Consulta para buscar el id ingresado
     SELECT V.id_venta INTO v_existe_venta
     FROM Ventas V
     WHERE V.id_venta = p_id_venta;
@@ -29,10 +25,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo: 
-SET @id_venta = 1;
-SELECT fn_CalcularTotalVenta(@id_venta) AS 'Total Venta';
-
 -- 2. Validar si hay stock suficiente para un producto.
 DELIMITER $$
 CREATE FUNCTION fn_VerificarDisponibilidadStock(p_id_producto INT)
@@ -40,14 +32,10 @@ RETURNS VARCHAR(50)
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-	-- Declaración de variables
-    -- Declaramos Variable para encontrar el id del producto
     DECLARE v_existe_producto INT DEFAULT NULL;
-    -- Declaramos Variable para almacenar el texto a mostrar
     DECLARE V_texto_respuesta VARCHAR(50) DEFAULT '';
     
-	-- Consulta para buscar el id ingresado
-    SELECT P.id_producto INTO v_existe_producto
+	SELECT P.id_producto INTO v_existe_producto
     FROM Productos P
     WHERE P.id_producto = p_id_producto;
     
@@ -68,10 +56,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_producto = 1;
-SELECT fn_VerificarDisponibilidadStock(@id_producto) AS 'Respuesta Disponible';
-
 -- 3. Devolver el precio actual de un producto.
 DELIMITER $$
 CREATE FUNCTION fn_ObtenerPrecioProducto(p_id_producto INT)
@@ -79,13 +63,9 @@ RETURNS DECIMAL(10, 2)
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-	-- Declaración de variables
-    -- Declaramos Variable para encontrar el id del producto
     DECLARE v_existe_producto INT DEFAULT NULL;
-    -- Declaramos Variable para almacenar el precio del producto
     DECLARE v_precio_producto DECIMAL;
     
-    -- Consulta para buscar el id ingresado
     SELECT P.id_producto INTO v_existe_producto
     FROM Productos P
     WHERE P.id_producto = p_id_producto;
@@ -103,10 +83,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_producto = 2;
-SELECT fn_ObtenerPrecioProducto(@id_producto) AS 'Precio Producto';
-
 -- 4. Calcular la edad de un cliente a partir de su fecha de nacimiento.
 DELIMITER $$
 CREATE FUNCTION fn_CalcularEdadCliente(p_fecha_nacimiento DATE)
@@ -114,23 +90,47 @@ RETURNS INT
 NOT DETERMINISTIC
 NO SQL
 BEGIN
-	-- Declaramos la Variable donde se almacenará la edad
     DECLARE v_edad INT;
     
-    -- Validamos la fecha ingresada
     IF p_fecha_nacimiento > CURDATE() THEN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, has ingresado una fecha mayor a la actual';
 	ELSE
-        -- Realizamos el cálculo
 		SET v_edad = TIMESTAMPDIFF(YEAR, p_fecha_nacimiento, CURDATE());
 	END IF;
     RETURN v_edad;
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @fecha_nacimiento = '2008-12-29';
-SELECT fn_CalcularEdadCliente(@fecha_nacimiento) AS 'Edad';
+-- 4b. Calcular la edad de un cliente a partir de su ID (busca fecha_nacimiento en Clientes).
+DELIMITER $$
+CREATE FUNCTION fn_CalcularEdadClientePorId(p_id_cliente INT)
+RETURNS INT
+NOT DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE v_existe_cliente INT DEFAULT NULL;
+    DECLARE v_fecha_nacimiento DATE;
+    DECLARE v_edad INT;
+
+    IF p_id_cliente <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
+    END IF;
+
+    SELECT C.id_cliente, C.fecha_nacimiento INTO v_existe_cliente, v_fecha_nacimiento
+    FROM Clientes C
+    WHERE C.id_cliente = p_id_cliente;
+
+    IF v_existe_cliente IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el id que ingreso no existe';
+    ELSEIF v_fecha_nacimiento IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el cliente no tiene fecha de nacimiento registrada';
+    ELSE
+        SET v_edad = TIMESTAMPDIFF(YEAR, v_fecha_nacimiento, CURDATE());
+    END IF;
+
+    RETURN v_edad;
+END $$
+DELIMITER ;
 
 -- 5. Devuelve el nombre y apellido de un cliente en un formato estandarizado.
 DELIMITER $$
@@ -139,14 +139,10 @@ RETURNS VARCHAR(50)
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-	-- Declaración de variables
-    -- Declaramos Variable para encontrar el id del cliente
     DECLARE v_existe_cliente INT DEFAULT NULL;
-    -- Declaramos Variable para almacenar el texto a mostrar
     DECLARE v_nombre_formateado VARCHAR(50) DEFAULT '';
     
-	-- Consulta para buscar el id ingresado
-    SELECT C.id_cliente INTO v_existe_cliente
+	SELECT C.id_cliente INTO v_existe_cliente
     FROM Clientes C
     WHERE C.id_cliente = p_id_cliente;
 
@@ -164,10 +160,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_cliente = 3;
-SELECT fn_FormatearNombreCompleto(@id_cliente) AS 'Nombre Completo Formateado';
-
 -- 6. Devuelve VERDADERO si un cliente realizó su primera compra en los últimos 30 días.
 DELIMITER $$
 CREATE FUNCTION fn_EsClienteNuevo(p_id_cliente INT)
@@ -175,16 +167,11 @@ RETURNS TINYINT
 NOT DETERMINISTIC
 READS SQL DATA
 BEGIN
-	-- Declaración de variables
-	-- Declaramos Variable para encontrar el id del cliente
     DECLARE v_existe_cliente INT DEFAULT NULL;
-    -- Declaramos Variable para almacenar la primera compra
     DECLARE v_primera_compra DATE DEFAULT NULL;
-    -- Declaramos Variable
     DECLARE v_resultado TINYINT DEFAULT 0;
     
-	-- Consulta para buscar el id ingresado
-    SELECT C.id_cliente INTO v_existe_cliente
+	SELECT C.id_cliente INTO v_existe_cliente
     FROM Clientes C
     WHERE C.id_cliente = p_id_cliente;
     
@@ -205,10 +192,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_cliente = 54;
-SELECT fn_EsClienteNuevo(@id_cliente) AS 'Compra en 30 Días';
-
 -- 7. Calcula el costo de envío basado en el peso total de los productos de una venta.
 DELIMITER $$
 CREATE FUNCTION fn_CalcularCostoEnvio(p_id_venta INT)
@@ -216,12 +199,10 @@ RETURNS DECIMAL(10, 2)
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-    -- Declaramos variables para verificar existencia y almacenar resultados
     DECLARE v_existe_venta INT DEFAULT 0;
     DECLARE v_peso_total DECIMAL(10, 2) DEFAULT 0;
     DECLARE v_costo_envio DECIMAL(10, 2) DEFAULT 0;
     
-    -- Verificamos que la venta exista
     SELECT COUNT(*) INTO v_existe_venta
     FROM Ventas
     WHERE id_venta = p_id_venta;
@@ -231,36 +212,24 @@ BEGIN
     ELSEIF v_existe_venta = 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el id ingresado no existe';
     ELSE
-        -- Sumamos el peso de todos los productos de esa venta (cantidad * peso unitario)
-        SELECT COALESCE(SUM(DV.cantidad * P.peso_kg), 0) INTO v_peso_total
+        SELECT COALESCE(SUM(DV.cantidad * P.peso_lb), 0) INTO v_peso_total
         FROM Detalles_ventas DV
         INNER JOIN Productos P ON P.id_producto = DV.producto_id
         WHERE DV.venta_id = p_id_venta;
 
-        -- Aplicamos la tarifa según el rango de peso
         SET v_costo_envio = CASE
-            WHEN v_peso_total <= 1 THEN 15.00
-            WHEN v_peso_total <= 5 THEN 30.00
-            WHEN v_peso_total <= 10 THEN 50.00
-            ELSE 50.00 + ((v_peso_total - 10) * 5.00)
+            WHEN v_peso_total <= 2 THEN 15.00
+            WHEN v_peso_total <= 11 THEN 30.00
+            WHEN v_peso_total <= 22 THEN 50.00
+            ELSE 50.00 + ((v_peso_total - 22) * 2.27)
         END;
     END IF;
 
     RETURN v_costo_envio;
 END $$
 DELIMITER ;
--- Nota: Explicando el precio y el porqué de la fórmula del ELSE.
--- Se definieron 3 tarifas fijas para los rangos de peso más comunes en el catálogo
--- (hasta 1kg, hasta 5kg, hasta 10kg), pero un envío pesado (más de 10kg),
--- no puede seguir cobrando un fijo de $50.00, ya que
--- el costo real de transporte sí crece proporcional al peso a partir de cierto punto.
--- Por eso, se toma la tarifa tope ($50.00, la de "hasta 10kg") como base,
--- y se le suma $5.00 por cada kg adicional que exceda esos 10kg:
--- 50.00 + ((peso_total - 10) * 5.00)
-
--- Ejemplo:
-SET @id_venta = 1;
-SELECT CONCAT('$ ', fn_CalcularCostoEnvio(@id_venta)) as 'Costo Envío'
+-- Nota: tarifa en libras (estándar EE.UU.). Tope de $50 hasta 22lb; cada libra
+-- adicional suma $2.27 (equivalente a los $5.00/kg originales convertidos: 5.00/2.20≈2.27).
 
 -- 8. Aplica un porcentaje de descuento a un monto dado.
 DELIMITER $$
@@ -269,7 +238,6 @@ RETURNS DECIMAL(10, 2)
 DETERMINISTIC
 NO SQL
 BEGIN
-	-- Declaramos variables para Almacenar resultados
     DECLARE v_total_final DECIMAL(10, 2) DEFAULT 0;
     
 	IF p_monto <= 0 THEN
@@ -284,11 +252,6 @@ BEGIN
     RETURN v_total_final;
 END $$
 DELIMITER ;
--- Nota: Los porcentajes se agregaron de la forma decimal para no agregar /100
-
--- Ejemplo:
-SET @cantidad = 800;
-SELECT CONCAT('$ ', fn_AplicarDescuento(@cantidad)) as 'Total con descuento aplicado';
 
 -- 9. Devuelve la fecha de la última compra de un cliente
 DELIMITER $$
@@ -297,24 +260,18 @@ RETURNS DATE
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-	-- Declaración de variables
-    -- Declaramos Variable para encontrar el id del cliente
     DECLARE v_existe_cliente INT DEFAULT NULL;
-    -- Declaramos Variable para revisar si el cliente tiene compras
     DECLARE v_cantidad_compras INT DEFAULT 0;
-    -- Declaramos Variable para almacenar la fecha
     DECLARE v_ultima_fecha DATE;
     
     IF p_id_cliente <= 0 THEN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
 	END IF;
     
-	-- Consulta para buscar el id ingresado
-    SELECT C.id_cliente INTO v_existe_cliente
+	SELECT C.id_cliente INTO v_existe_cliente
     FROM Clientes C
     WHERE C.id_cliente = p_id_cliente;
     
-    -- Consulta para contar compras
 	SELECT COUNT(V.cliente_id) INTO v_cantidad_compras
     FROM Ventas V
     WHERE V.cliente_id = p_id_cliente AND V.estado_id IN (3, 4);
@@ -332,10 +289,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_cliente = 24;
-SELECT fn_ObtenerUltimaFechaCompra(@id_cliente) as 'Fecha Última Compra';
-
 -- 10. Comprueba si una cadena de texto tiene un formato de correo electrónico válido.
 DELIMITER $$
 CREATE FUNCTION fn_ValidarFormatoEmail(p_correo VARCHAR(320))
@@ -343,7 +296,6 @@ RETURNS VARCHAR(50)
 DETERMINISTIC
 NO SQL
 BEGIN
-	-- Declaramos Variable para almacenar el valor booleano
     DECLARE v_email_correcto TINYINT DEFAULT 0;
     DECLARE v_texto VARCHAR(50);
     
@@ -354,10 +306,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @correo = 'alanqgmail.com';
-SELECT fn_ValidarFormatoEmail(@correo) as 'Correo Valido';
-
 -- 11. Devuelve el nombre de la categoría a partir del ID de un producto.
 DELIMITER $$
 CREATE FUNCTION fn_ObtenerNombreCategoria(p_id_producto INT)
@@ -365,8 +313,6 @@ RETURNS VARCHAR(50)
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-	-- Declaración de variables
-    -- Declaramos Variable para encontrar el id de producto y almacenar el nombre de la categoria
     DECLARE v_existe_producto INT DEFAULT NULL;
     DECLARE v_nombre_categoria VARCHAR(50) DEFAULT '';
     
@@ -374,7 +320,6 @@ BEGIN
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
 	END IF;
     
-    -- Consulta para buscar el id ingresado
     SELECT P.id_producto INTO v_existe_producto
     FROM Productos P
     WHERE P.id_producto = p_id_producto;
@@ -391,10 +336,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_producto = 70;
-SELECT fn_ObtenerNombreCategoria(@id_producto) as 'Nombre Categoría';
-
 -- 12. Cuenta el número total de compras realizadas por un cliente.
 DELIMITER $$
 CREATE FUNCTION fn_ContarVentasCliente(p_id_cliente INT)
@@ -402,8 +343,6 @@ RETURNS INT
 DETERMINISTIC
 READS SQL DATA
 BEGIN 
-	-- Declaración de variables
-    -- Declaramos Variable para encontrar el id del cliente y almacenar la cantidad de compras
     DECLARE v_existe_cliente INT DEFAULT NULL;
     DECLARE v_total_compras INT DEFAULT 0;
     
@@ -411,8 +350,7 @@ BEGIN
 	    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
     END IF;
 
-	-- Consulta para buscar el id ingresado
-    SELECT C.id_cliente INTO v_existe_cliente
+	SELECT C.id_cliente INTO v_existe_cliente
     FROM Clientes C
     WHERE C.id_cliente = p_id_cliente;
 	
@@ -432,10 +370,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_cliente = 56;
-SELECT fn_ContarVentasCliente(@id_cliente) AS 'Total de Compras Cliente';
-
 -- 13. Devuelve el número de días transcurridos desde la última compra de un cliente.
 DELIMITER $$
 CREATE FUNCTION fn_CalcularDiasDesdeUltimaCompra(p_id_cliente INT)
@@ -443,8 +377,6 @@ RETURNS INT
 NOT DETERMINISTIC
 READS SQL DATA
 BEGIN 
-    -- Declaración de variables
-    -- Declaramos Variable para encontrar el id del cliente y almacenar el número de días
     DECLARE v_existe_cliente INT DEFAULT NULL;
     DECLARE v_dias INT DEFAULT 0;
     DECLARE v_cantidad_compras INT DEFAULT 0;
@@ -453,7 +385,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
     END IF;
 
-    -- Consulta para buscar el id ingresado
     SELECT C.id_cliente INTO v_existe_cliente
     FROM Clientes C
     WHERE C.id_cliente = p_id_cliente;
@@ -462,7 +393,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el id que ingreso no existe';
     END IF;
 
-       -- Consulta para contar compras
     SELECT COUNT(V.cliente_id) INTO v_cantidad_compras
     FROM Ventas V
     WHERE V.cliente_id = p_id_cliente AND V.estado_id IN (3, 4);
@@ -478,10 +408,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_cliente = 2;
-SELECT fn_CalcularDiasDesdeUltimaCompra(@id_cliente) AS 'No. Días sin comprar';
-
 -- 14. Asigna un estado de lealtad (Bronce, Plata, Oro) a un cliente según su gasto total.
 DELIMITER $$
 CREATE FUNCTION fn_DeterminarEstadoLealtad(p_id_cliente INT)
@@ -489,8 +415,6 @@ RETURNS VARCHAR(25)
 DETERMINISTIC
 READS SQL DATA
 BEGIN 
-	-- Declaración de variables
-    -- Declaramos Variable para encontrar el id del cliente, almacenar gasto total y almacenar el texto
     DECLARE v_existe_cliente INT DEFAULT NULL;
     DECLARE v_gasto_total DECIMAL(10, 2) DEFAULT 0;
     DECLARE v_estado_texto VARCHAR(25);
@@ -499,7 +423,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
     END IF;
 
-    -- Consulta para buscar el id ingresado
     SELECT C.id_cliente INTO v_existe_cliente
     FROM Clientes C
     WHERE C.id_cliente = p_id_cliente;
@@ -519,16 +442,12 @@ BEGIN
         SET v_estado_texto = CASE
 			WHEN v_gasto_total > 5000 THEN 'Oro'
             WHEN v_gasto_total > 1000 THEN 'Plata'
-            ELSE'Bronce'
+            ELSE 'Bronce'
 		END;
     END IF;
 	RETURN v_estado_texto;
 END $$
 DELIMITER ;
-
--- Ejemplo:
-SET @id_cliente = 4;
-SELECT fn_DeterminarEstadoLealtad(@id_cliente) AS 'Estado Lealtad';
 
 -- 15. Genera un código de producto (SKU) único basado en su nombre y categoría.
 DELIMITER $$
@@ -537,8 +456,6 @@ RETURNS VARCHAR(12)
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-    -- Declaración de variables
-    -- Declaramos Variable para encontrar la categoría, armar el prefijo y el sku final
     DECLARE v_existe_categoria INT DEFAULT NULL;
     DECLARE v_prefijo_categoria VARCHAR(3);
     DECLARE v_prefijo_nombre VARCHAR(3);
@@ -553,7 +470,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el nombre del producto no puede estar vacío';
     END IF;
 
-    -- Consulta para buscar el id ingresado
     SELECT C.id_categoria INTO v_existe_categoria
     FROM Categorias C
     WHERE C.id_categoria = p_categoria_id;
@@ -561,14 +477,12 @@ BEGIN
     IF v_existe_categoria IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el id de categoría que ingreso no existe';
     ELSE
-        -- Armamos el prefijo con las primeras 3 letras del nombre y de la categoría
         SET v_prefijo_nombre = UPPER(LEFT(TRIM(p_nombre), 3));
 
         SELECT UPPER(LEFT(C.nombre, 3)) INTO v_prefijo_categoria
         FROM Categorias C
         WHERE C.id_categoria = p_categoria_id;
 
-        -- Contamos cuántos productos ya usan este mismo prefijo, para el consecutivo
         SELECT COUNT(*) INTO v_consecutivo
         FROM Productos P
         WHERE P.sku LIKE CONCAT(v_prefijo_nombre, '-', v_prefijo_categoria, '-%');
@@ -580,10 +494,6 @@ BEGIN
 END $$
 DELIMITER ;
 
-SET @nombre = 'Cargador Rápido USB-C';
-SET @categoria = 1;
-SELECT fn_GenerarSKU(@nombre, @categoria) AS 'SKU Generado';
-
 -- 16. Calcula el impuesto (IVA) sobre el total de una venta.
 DELIMITER $$
 CREATE FUNCTION fn_CalcularIVA(p_id_venta INT)
@@ -591,8 +501,6 @@ RETURNS DECIMAL(10, 2)
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-    -- Declaración de variables
-    -- Declaramos Variable para encontrar el id de la venta, el monto y el iva
     DECLARE v_existe_venta INT DEFAULT NULL;
     DECLARE v_monto_venta DECIMAL(10, 2) DEFAULT 0;
     DECLARE v_monto_sin_iva DECIMAL(10, 2) DEFAULT 0;
@@ -602,7 +510,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
     END IF;
 
-    -- Consulta para buscar el id ingresado
     SELECT V.id_venta INTO v_existe_venta
     FROM Ventas V
     WHERE V.id_venta = p_id_venta;
@@ -610,29 +517,18 @@ BEGIN
     IF v_existe_venta IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el id que ingreso no existe';
     ELSE
-        -- Sumamos el monto real de la venta a partir de sus detalles
         SELECT COALESCE(SUM(DV.cantidad * DV.precio_unitario_congelado), 0) INTO v_monto_venta
         FROM Detalles_ventas DV
         WHERE DV.venta_id = p_id_venta;
 
-		-- Se divide el monto total de las ventas por 1.12
 		SET v_monto_sin_iva = v_monto_venta / 1.12;
-
-        -- se usa 12%, la tasa de IVA de Guatemala para obetner el valor del IVA
         SET v_iva = v_monto_sin_iva * 0.12;
     END IF;
 
     RETURN v_iva;
 END $$
 DELIMITER ;
--- Notas Cálculo: 
--- Valor sin IVA = Valor de venta / 1.12
--- Cálculo del IVA = Valor sin IVA * 0.12
--- Nota: En esta función no es necesario si la venta fué cancelada o ya fué enviada
-
--- Ejemplo:
-SET @id_venta = 1;
-SELECT CONCAT('$ ', fn_CalcularIVA(@id_venta)) AS 'IVA de la Venta';
+-- Nota: Valor sin IVA = Valor de venta / 1.12; IVA = Valor sin IVA * 0.12 (12%, tasa de Guatemala).
 
 -- 17. Suma el stock de todos los productos de una categoría. 
 DELIMITER $$
@@ -641,8 +537,6 @@ RETURNS INT
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-    -- Declaración de variables
-    -- Declaramos Variable para encontrar el id de categoría y almacenar el stock total
     DECLARE v_existe_categoria INT DEFAULT NULL;
     DECLARE v_stock_total INT DEFAULT 0;
 
@@ -650,7 +544,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
     END IF;
 
-    -- Consulta para buscar el id ingresado
     SELECT C.id_categoria INTO v_existe_categoria
     FROM Categorias C
     WHERE C.id_categoria = p_id_categoria;
@@ -667,19 +560,13 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo: 
-SET @categoria = 1;
-SELECT fn_ObtenerStockTotalPorCategoria(@categoria) AS 'Stock Total Categoría';
-
--- 18.  Calcula la fecha estimada de entrega de un pedido según la ubicación del cliente.
+-- 18. Calcula la fecha estimada de entrega de un pedido según la ubicación del cliente.
 DELIMITER $$
 CREATE FUNCTION fn_EstimarFechaEntrega(p_id_venta INT)
 RETURNS DATE
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-    -- Declaración de variables
-    -- Declaramos Variable para encontrar el id de venta, el país del cliente y la fecha estimada
     DECLARE v_existe_venta INT DEFAULT NULL;
     DECLARE v_pais VARCHAR(50);
     DECLARE v_fecha_venta DATE;
@@ -690,7 +577,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0';
     END IF;
 
-    -- Consulta para buscar el id ingresado
     SELECT V.id_venta INTO v_existe_venta
     FROM Ventas V
     WHERE V.id_venta = p_id_venta;
@@ -698,16 +584,14 @@ BEGIN
     IF v_existe_venta IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el id que ingreso no existe';
     ELSE
-        -- Consulta para obtener el país del cliente y la fecha de la venta
         SELECT DATE(V.fecha_venta), PA.nombre INTO v_fecha_venta, v_pais
         FROM Ventas V
-        INNER JOIN Direcciones_Envio DE ON DE.id_direccion = V.direccion_id
-        INNER JOIN Ciudades CI ON CI.id_ciudad = DE.ciudad_id
+        INNER JOIN direcciones_clientes DC ON DC.cliente_id = V.cliente_id
+        INNER JOIN Ciudades CI ON CI.id_ciudad = DC.ciudad_id
         INNER JOIN Regiones R ON R.id_region = CI.region_id
         INNER JOIN Paises PA ON PA.id_pais = R.pais_id
         WHERE V.id_venta = p_id_venta;
 
-        -- Definimos los días de entrega según el país (envío local vs internacional)
         SET v_dias_entrega = CASE
             WHEN v_pais = 'Guatemala' THEN 3
             WHEN v_pais = 'Colombia' THEN 7
@@ -721,10 +605,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @id_venta = 117;
-SELECT fn_EstimarFechaEntrega(@id_venta) AS 'Fecha Estimada de Entrega';
-
 -- 19. Convierte un monto a otra moneda usando una tasa de cambio fija. Primera Versión
 DELIMITER $$
 CREATE FUNCTION fn_ConvertirMoneda(p_monto DECIMAL(10, 2), p_id_pais INT)
@@ -732,8 +612,6 @@ RETURNS DECIMAL(10, 2)
 DETERMINISTIC
 READS SQL DATA
 BEGIN
-    -- Declaración de variables
-    -- Declaramos Variable para encontrar el id del país, el nombre del país y el monto convertido
     DECLARE v_existe_pais INT DEFAULT NULL;
     DECLARE v_pais VARCHAR(50);
     DECLARE v_tasa_cambio DECIMAL(10, 4) DEFAULT 0;
@@ -747,7 +625,6 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, no se aceptan valor igual o menor a 0 en el id de país';
     END IF;
 
-    -- Consulta para buscar el id de país ingresado
     SELECT PA.id_pais, PA.nombre INTO v_existe_pais, v_pais
     FROM Paises PA
     WHERE PA.id_pais = p_id_pais;
@@ -755,10 +632,9 @@ BEGIN
     IF v_existe_pais IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Lo sentimos, el id de país que ingreso no existe';
     ELSE
-        -- Definimos la tasa de cambio según el país; si no está definida, se marca como error
         SET v_tasa_cambio = CASE
-            WHEN v_pais = 'Guatemala' THEN 7.75    -- USD a Quetzales (GTQ)
-            WHEN v_pais = 'Colombia' THEN 4000.00  -- USD a Pesos Colombianos (COP)
+            WHEN v_pais = 'Guatemala' THEN 7.75
+            WHEN v_pais = 'Colombia' THEN 4000.00
             ELSE 0
         END;
 
@@ -772,24 +648,14 @@ BEGIN
     RETURN v_monto_convertido;
 END $$
 DELIMITER ;
--- Nota: Se decidio indicar
 
--- Ejemplo:
-SET @monto = 100;
-SET @id_pais = 1; -- Guatemala
-SELECT fn_ConvertirMoneda(@monto, @id_pais) AS 'Monto Convertido';
-
-SET @id_pais = 2; -- Colombia
-SELECT fn_ConvertirMoneda(@monto, @id_pais) AS 'Monto Convertido';
-
--- 19. Convierte un monto a otra moneda usando una tasa de cambio fija. Segunda Versión
+-- 19b. Convierte un monto a otra moneda usando una tasa de cambio fija. Segunda Versión
 DELIMITER $$
-CREATE FUNCTION fn_ConvertirMoneda(p_monto DECIMAL(10, 2), p_tasa_cambio DECIMAL(10, 4))
+CREATE FUNCTION fn_ConvertirMonedaTasaFija(p_monto DECIMAL(10, 2), p_tasa_cambio DECIMAL(10, 4))
 RETURNS DECIMAL(10, 2)
 DETERMINISTIC
 NO SQL
 BEGIN
-    -- Declaramos Variable para almacenar el resultado
     DECLARE v_monto_convertido DECIMAL(10, 2) DEFAULT 0;
 
     IF p_monto <= 0 THEN
@@ -804,10 +670,6 @@ BEGIN
 END $$
 DELIMITER ;
 
--- Ejemplo:
-SET @monto = 100;
-SET @tasa = 7.75; -- Ejemplo: USD a GTQ
-SELECT CONCAT('Q ', fn_ConvertirMoneda(@monto, @tasa)) AS 'Monto Convertido';
 
 -- 20. Verifica si una contraseña cumple con los criterios de seguridad (longitud, caracteres, etc.).
 DELIMITER $$
@@ -816,7 +678,6 @@ RETURNS VARCHAR(80)
 DETERMINISTIC
 NO SQL
 BEGIN
-    -- Declaramos Variable para almacenar el resultado
     DECLARE v_resultado VARCHAR(80);
 
     SET v_resultado = CASE
@@ -831,8 +692,3 @@ BEGIN
     RETURN v_resultado;
 END $$
 DELIMITER ;
--- Nota: El usuario debe ingresar almenos una letra mayuscula, minuscula y números para que pueda tener una buena contraseña 
-
--- Ejemplo
-SET @contrasenia = 'Segura$123!';
-SELECT fn_ValidarComplejidadContrasenia(@contrasenia) AS 'Resultado';
