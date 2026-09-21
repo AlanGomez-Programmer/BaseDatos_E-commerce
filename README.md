@@ -75,6 +75,36 @@ CALL sp_ObtenerDashboardAdmin();
 
 ---
 
+## Actualizaciones (Examen)
+
+Se agrega un nuevo evento para desactivar automáticamente las cuentas de clientes que no han realizado ninguna compra en los últimos dos años.
+
+El nuevo evento es el siguiente: 
+
+```sql
+    DELIMITER $$
+    CREATE EVENT evt_desactivar_cuentas_inactivas
+    ON SCHEDULE EVERY 1 MONTH STARTS CURRENT_TIMESTAMP
+    DO
+    BEGIN 
+
+        UPDATE Clientes
+        SET activo = 0 
+        WHERE activo = 1
+        AND (
+            (fecha_ultimo_pedido IS NOT NULL AND fecha_ultimo_pedido < DATE_SUB(CURDATE(), INTERVAL 2 YEAR))
+            OR (fecha_ultimo_pedido IS NULL AND fecha_registro < DATE_SUB(CURDATE(), INTERVAL 2 YEAR))
+        );
+    END $$
+    DELIMITER ; 
+```
+
+También se agregó un nuevo usuario para poner a prueba el evento y verficar que el evento funcione correctamente.
+
+Esta nueva función se encuentra en el archivo `06_Eventos.sql`
+
+---
+
 ## 👨 AUTOR
 
 Programador Full-Stack Jr. Alan Gomez

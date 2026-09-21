@@ -219,4 +219,35 @@ BEGIN
 END $$
 DELIMITER ;
 
-SELECT * FROM reportes_proveedores;
+-- Examen: Mantenimientos de cuentas inactivas sin 2 años de compras
+-- Insertar datos de un cliente
+INSERT INTO Clientes(nombre, apellido, email, contrasenia, fecha_nacimiento, fecha_registro, nivel_lealtad, activo)
+VALUES
+('Junior', 'Gonzles', 'Juniorgonzales@gmail.com', 'adadfadfadfadfewre', '2006-05-19', '2023-01-01', 'Bronce', 1);
+-- Hacer la consulta para verficar si se registro el cliente nuevo
+SELECT * FROM Clientes 
+ WHERE activo = 1
+	AND (
+		(fecha_ultimo_pedido IS NOT NULL AND fecha_ultimo_pedido < DATE_SUB(CURDATE(), INTERVAL 2 YEAR))
+		OR (fecha_ultimo_pedido IS NULL AND fecha_registro < DATE_SUB(CURDATE(), INTERVAL 2 YEAR))
+);
+
+-- Evento:
+DELIMITER $$
+CREATE EVENT evt_desactivar_cuentas_inactivas
+ON SCHEDULE EVERY 1 MONTH STARTS CURRENT_TIMESTAMP
+DO
+BEGIN 
+
+	UPDATE Clientes
+    SET activo = 0 
+    WHERE activo = 1
+	AND (
+		(fecha_ultimo_pedido IS NOT NULL AND fecha_ultimo_pedido < DATE_SUB(CURDATE(), INTERVAL 2 YEAR))
+		OR (fecha_ultimo_pedido IS NULL AND fecha_registro < DATE_SUB(CURDATE(), INTERVAL 2 YEAR))
+	);
+END $$
+DELIMITER ; 
+
+-- Consultar la tabla de clientes para verificar que si funciona
+SELECT * FROM Clientes;
