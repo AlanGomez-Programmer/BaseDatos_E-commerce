@@ -6,6 +6,10 @@ Base de datos relacional para una tienda en línea que opera en Guatemala y Colo
 
 ---
 
+## Diagrama
+
+![Diagrama](./assets/images/Diagrama-UML-ER.png)
+
 ## Estructura del proyecto
 
 ```
@@ -49,14 +53,14 @@ Abre cada archivo en MySQL Workbench (**File > Open SQL Script**) y ejecútalo c
 
 El orden **no es el orden numérico de los archivos** — `04_Seguridad.sql` depende de procedimientos que se crean después, en `07`, así que debe ejecutarse al final:
 
-1. `01_Esquema_y_Datos.sql`
-2. `01_1_Esquemas_y_Datos.sql`
-3. `02_Consultas_Avanzadas.sql`
-4. `03_Funciones.sql`
+1. `01_Esquema.sql`
+2. `02_Datos.sql`
+3. `03_Consultas_Avanzadas.sql`
+4. `04_Funciones.sql`
 5. `05_Triggers.sql`
 6. `06_Eventos.sql`
 7. `07_Procedimientos_Almacenados.sql`
-8. `04_Seguridad.sql` ← usa `GRANT EXECUTE ON PROCEDURE`, debe ir **al final**, no en la posición 4
+8. `08_Seguridad.sql`
 
 Los archivos de `Examples/` son opcionales y se corren después de su script correspondiente, en cualquier momento.
 
