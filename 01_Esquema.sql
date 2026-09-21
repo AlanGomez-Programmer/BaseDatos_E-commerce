@@ -278,7 +278,6 @@ CREATE TABLE log_ajustes_stock(
     PRIMARY KEY (id_log)
 );
 
--- CORRECCIÓN: tabla faltante, requerida por evt_check_data_consistency_nightly.
 CREATE TABLE log_inconsistencias(
     id_log INT AUTO_INCREMENT,
     descripcion VARCHAR(255) NOT NULL,
@@ -287,7 +286,6 @@ CREATE TABLE log_inconsistencias(
     PRIMARY KEY (id_log)
 );
 
--- CORRECCIÓN: tabla faltante, requerida por evt_send_birthday_greetings_daily.
 CREATE TABLE cupones_cumpleanos(
     id_cupon INT AUTO_INCREMENT,
     cliente_id INT NOT NULL,
