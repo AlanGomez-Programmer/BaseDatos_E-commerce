@@ -331,12 +331,11 @@ CREATE TABLE kpis_mensuales(
 
 CREATE TABLE ranking_productos(
     id_ranking INT AUTO_INCREMENT,
-    producto_id INT NOT NULL,
+    nombre_producto VARCHAR(50) NOT NULL, 
     posicion INT NOT NULL,
     unidades_vendidas INT NOT NULL,
     fecha_calculo DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_ranking),
-    FOREIGN KEY (producto_id) REFERENCES Productos(id_producto)
+    PRIMARY KEY (id_ranking)
 );
 
 CREATE TABLE log_tamano_bd(
@@ -352,18 +351,16 @@ CREATE TABLE alertas_fraude(
     motivo VARCHAR(255) NOT NULL,
     fecha_deteccion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     revisada TINYINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (id_alerta),
-    FOREIGN KEY (cliente_id) REFERENCES Clientes(id_cliente)
+    PRIMARY KEY (id_alerta)
 );
 
 CREATE TABLE reportes_proveedores(
     id_reporte INT AUTO_INCREMENT,
-    proveedor_id INT NOT NULL,
+    nombre_proveedor VARCHAR(50) NOT NULL,
     anio INT NOT NULL,
     mes INT NOT NULL,
     unidades_vendidas INT NOT NULL,
     monto_generado DECIMAL(12, 2) NOT NULL,
     fecha_generacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_reporte),
-    FOREIGN KEY (proveedor_id) REFERENCES Proveedores(id_proveedor)
+    PRIMARY KEY (id_reporte)
 );
